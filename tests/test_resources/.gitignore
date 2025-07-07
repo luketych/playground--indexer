@@ -1,0 +1,4 @@
+# Ignore all test resources except this README and .gitignore
+*
+!README.md
+!.gitignore

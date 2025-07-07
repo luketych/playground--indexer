@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__research--context_selection_Docs__fetch_research_docs",
+      "mcp__research--context_selection_Docs__search_repo_code",
+      "mcp__research--context_selection_Docs__fetch_generic_url_content",
+      "Bash(python3 tests:*)",
+      "mcp__site-three_Docs__fetch_generic_url_content",
+      "mcp__site-three_Docs__search_site_three_code",
+      "Bash(mkdir:*)",
+      "Bash(uv run:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": false
+}
