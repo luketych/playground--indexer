@@ -8,7 +8,9 @@
       "mcp__site-three_Docs__fetch_generic_url_content",
       "mcp__site-three_Docs__search_site_three_code",
       "Bash(mkdir:*)",
-      "Bash(uv run:*)"
+      "Bash(uv run:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)"
     ]
   },
   "enableAllProjectMcpServers": false

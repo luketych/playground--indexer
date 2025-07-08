@@ -14,6 +14,8 @@ from unittest.mock import patch, MagicMock
 # import pytest  # Optional, only used if available
 
 # Import the module from the package structure
+import sys
+sys.path.insert(0, 'src')
 from playground_organizer import PlaygroundOrganizer
 
 

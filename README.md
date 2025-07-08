@@ -4,21 +4,29 @@ Automatically organize your playground directories by **access frequency** and *
 
 ## 📋 Quick Start
 
+### Web Interface (Read-Only)
+```bash
+# Launch web UI to view and analyze files (no file system changes)
+uv run python web_ui.py
+# Open http://localhost:8000 in your browser
+```
+
+### Command Line Interface
 ```bash
 # 1. Analyze what you have
-python3 playground-organizer.py --report
+uv run playground-organizer.py --report
 
 # 2. Preview organization (dry run)
-python3 playground-organizer.py --organize
+uv run playground-organizer.py --organize
 
 # 3. Execute organization
-python3 playground-organizer.py --organize --execute
+uv run playground-organizer.py --organize --execute
 
 # OR organize by themes using symlinks
-python3 playground-organizer.py --theme --execute
+uv run playground-organizer.py --theme --execute
 
 # OR create both time and theme organizations
-python3 playground-organizer.py --both --execute
+uv run playground-organizer.py --both --execute
 ```
 
 ## 📁 How It Works
@@ -71,6 +79,12 @@ python3 playground-organizer.py --both
 
 ## 🚨 Safety
 
+### Web Interface
+- **Read-only mode** - Web UI never modifies your file system
+- **View and analyze only** - Sort, filter, and preview organization without changes
+- **Safe exploration** - Browse files by time, theme, and access patterns
+
+### Command Line Interface  
 - **Dry run by default** - Shows what would move without actually moving
 - **No overwrites** - Detects and prevents duplicate file conflicts
 - **Reversible** - Simply move files back from organized folders to undo

@@ -1,0 +1,91 @@
+{
+  "tracking_enabled": true,
+  "auto_organize": false,
+  "excluded_dirs": [
+    ".git",
+    "node_modules",
+    ".DS_Store",
+    "__pycache__"
+  ],
+  "last_organized": null,
+  "use_symlinks": true,
+  "symlink_base_dir": "organized",
+  "theme_mappings": {
+    "ai": [
+      "gpt",
+      "llm",
+      "claude",
+      "openai",
+      "anthropic",
+      "ml",
+      "ai-",
+      "neural",
+      "model",
+      "transformer"
+    ],
+    "productivity": [
+      "todo",
+      "task",
+      "calendar",
+      "notes",
+      "productivity",
+      "planner",
+      "organize"
+    ],
+    "stocks": [
+      "stock",
+      "trading",
+      "finance",
+      "market",
+      "ticker",
+      "portfolio",
+      "investment"
+    ],
+    "development": [
+      "dev",
+      "code",
+      "programming",
+      "api",
+      "sdk",
+      "github",
+      "git"
+    ],
+    "data": [
+      "data",
+      "database",
+      "sql",
+      "analytics",
+      "etl",
+      "pipeline"
+    ],
+    "media": [
+      "video",
+      "audio",
+      "image",
+      "media",
+      "photo",
+      "music",
+      "movie"
+    ],
+    "tools": [
+      "tool",
+      "utility",
+      "helper",
+      "script",
+      "automation"
+    ],
+    "learning": [
+      "course",
+      "tutorial",
+      "learn",
+      "education",
+      "study",
+      "book"
+    ],
+    "misc": []
+  },
+  "organization_modes": [
+    "time",
+    "theme"
+  ]
+}

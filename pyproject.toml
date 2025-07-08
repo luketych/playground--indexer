@@ -4,10 +4,14 @@ version = "0.1.0"
 description = "Playground Organizer - Automatically organize files by access frequency"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn>=0.24.0",
+    "jinja2>=3.1.0",
+]
 
 [project.scripts]
-playground-organizer = "playground_organizer:main"
+playground-organizer = "playground-organizer:main"
 
 [build-system]
 requires = ["hatchling"]

@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playground Organizer</title>
+    <link href="/static/style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🗂️ Playground Organizer</h1>
+            <p id="playground-path">Loading...</p>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Files</h3>
+                <span id="total-files">-</span>
+            </div>
+            <div class="stat-card">
+                <h3>Total Size</h3>
+                <span id="total-size">-</span>
+            </div>
+            <div class="stat-card current">
+                <h3>🟢 Current</h3>
+                <span id="current-count">-</span>
+            </div>
+            <div class="stat-card recent">
+                <h3>🟡 Recent</h3>
+                <span id="recent-count">-</span>
+            </div>
+            <div class="stat-card old">
+                <h3>🟠 Old</h3>
+                <span id="old-count">-</span>
+            </div>
+            <div class="stat-card archive">
+                <h3>🔴 Archive</h3>
+                <span id="archive-count">-</span>
+            </div>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-links">
+                <a href="/" class="nav-link active">📊 Dashboard</a>
+                <a href="/explorer" class="nav-link">📁 Explorer</a>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="refresh-btn" class="btn">🔄 Refresh</button>
+            <button id="organize-time-btn" class="btn">📅 Preview Time Organization</button>
+            <button id="organize-theme-btn" class="btn">🏷️ Preview Theme Organization</button>
+            <button id="organize-both-btn" class="btn">📊 Preview Both</button>
+        </div>
+        
+        <div class="info-banner">
+            ℹ️ <strong>Read-Only Mode:</strong> This web UI only displays and analyzes your files. No files are moved, deleted, or modified.
+        </div>
+
+        <div class="filter-controls">
+            <input type="text" id="search-filter" placeholder="Search files..." />
+            <select id="category-filter">
+                <option value="">All Categories</option>
+                <option value="current">Current</option>
+                <option value="recent">Recent</option>
+                <option value="old">Old</option>
+                <option value="archive">Archive</option>
+            </select>
+            <select id="theme-filter">
+                <option value="">All Themes</option>
+                <option value="ai">AI</option>
+                <option value="productivity">Productivity</option>
+                <option value="stocks">Stocks</option>
+                <option value="development">Development</option>
+                <option value="data">Data</option>
+                <option value="media">Media</option>
+                <option value="tools">Tools</option>
+                <option value="learning">Learning</option>
+                <option value="misc">Misc</option>
+            </select>
+        </div>
+
+        <div class="files-container">
+            <div id="loading">Loading files...</div>
+            <div id="files-grid" class="files-grid"></div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

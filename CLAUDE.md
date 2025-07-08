@@ -4,6 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Common Commands
 
+### Web Interface (Read-Only)
+```bash
+# Launch web UI for safe file viewing and analysis
+uv run python web_ui.py
+# Opens at http://localhost:8000
+# Features: View files, filter by time/theme, search, preview organization
+# IMPORTANT: Web UI is READ-ONLY - no files are moved or changed
+```
+
 ### Python Scripts
 ```bash
 # Generate detailed access report
