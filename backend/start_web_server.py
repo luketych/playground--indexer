@@ -5,6 +5,8 @@ Web UI for Playground Organizer
 
 import os
 import sys
+import logging
+import traceback
 from pathlib import Path
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -12,17 +14,30 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import uvicorn
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # Import the main playground organizer module
-sys.path.insert(0, str(Path(__file__).parent))
-exec(open('playground-organizer.py').read())
-# Now PlaygroundOrganizer class is available
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from backend.src.playground_organizer.playground_organizer import PlaygroundOrganizer
 
-app = FastAPI(title="Playground Organizer", description="Web UI for file organization")
+app = FastAPI(
+    title=os.getenv("APP_TITLE", "Playground Organizer"), 
+    description=os.getenv("APP_DESCRIPTION", "Web UI for file organization")
+)
 
 # Setup static files and templates
-static_dir = Path(__file__).parent / "static"
-templates_dir = Path(__file__).parent / "templates"
+static_dir = Path(__file__).parent.parent / "frontend" / "static"
+templates_dir = Path(__file__).parent.parent / "frontend" / "templates"
 
 # Create directories if they don't exist
 static_dir.mkdir(exist_ok=True)
@@ -38,10 +53,16 @@ def get_organizer():
     """Get or create organizer instance"""
     global organizer
     if organizer is None:
-        # Default to current directory (where web_ui.py is run from)
-        playground_path = Path.cwd()
-        print(f"Initializing organizer with path: {playground_path}")
-        organizer = PlaygroundOrganizer(playground_path)
+        # Point to the actual playground directory (parent of __indexer)
+        playground_path = Path(__file__).parent.parent.parent
+        logger.info(f"Initializing organizer with path: {playground_path}")
+        try:
+            organizer = PlaygroundOrganizer(playground_path)
+            logger.info("Organizer initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize organizer: {e}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            raise
     return organizer
 
 @app.get("/", response_class=HTMLResponse)
@@ -53,28 +74,42 @@ async def index(request: Request):
 async def get_files():
     """Get all files with their analysis"""
     try:
+        logger.info("Starting /api/files endpoint")
         org = get_organizer()
+        logger.info(f"Got organizer instance, playground path: {org.playground_path}")
+        
+        logger.info("Calling analyze_access_patterns()")
         analysis = org.analyze_access_patterns()
+        logger.info(f"Analysis completed, found {sum(len(files) for files in analysis.values())} files")
         
         # Flatten the analysis into a single list with categories
         files = []
         for category, file_list in analysis.items():
+            logger.info(f"Processing category '{category}' with {len(file_list)} files")
             for file_info in file_list:
-                file_data = {
-                    "name": Path(file_info["path"]).name,
-                    "path": file_info["path"],
-                    "size": file_info["size"],
-                    "size_mb": round(file_info["size"] / (1024 * 1024), 2),
-                    "last_used": file_info["last_used_date"],
-                    "days_since_used": round(file_info["days_since_used"], 1),
-                    "time_category": category,
-                    "theme": org.detect_theme(Path(file_info["path"])),
-                    "atime": file_info["atime"],
-                    "mtime": file_info["mtime"],
-                    "ctime": file_info["ctime"]
-                }
-                files.append(file_data)
+                try:
+                    file_path = Path(file_info["path"])
+                    file_data = {
+                        "name": file_path.name,
+                        "path": file_info["path"],
+                        "size": file_info["size"],
+                        "size_mb": round(file_info["size"] / (1024 * 1024), 2),
+                        "last_used": file_info["last_used_date"],
+                        "days_since_used": round(file_info["days_since_used"], 1),
+                        "time_category": category,
+                        "theme": org.detect_theme(file_path),
+                        "is_directory": file_path.is_dir(),
+                        "file_extension": file_path.suffix.lower() if file_path.is_file() else "",
+                        "atime": file_info["atime"],
+                        "mtime": file_info["mtime"],
+                        "ctime": file_info["ctime"]
+                    }
+                    files.append(file_data)
+                except Exception as file_error:
+                    logger.error(f"Error processing file {file_info.get('path', 'unknown')}: {file_error}")
+                    continue
         
+        logger.info(f"Successfully processed {len(files)} files")
         return JSONResponse({
             "files": files,
             "total_files": len(files),
@@ -87,6 +122,8 @@ async def get_files():
             }
         })
     except Exception as e:
+        logger.error(f"Error in /api/files endpoint: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/themes")
@@ -117,21 +154,28 @@ async def get_themes():
 async def organize_files(request: Request):
     """Preview organization without making file system changes - READ ONLY"""
     try:
+        logger.info("Starting /api/organize endpoint")
         data = await request.json()
         mode = data.get("mode", "time")  # time, theme, or both
+        logger.info(f"Organization mode: {mode}")
         
         org = get_organizer()
+        logger.info(f"Got organizer, config keys: {list(org.config.keys())}")
         actions = []
         
         # ALWAYS run in dry-run mode - web UI is READ ONLY
         if mode == "time":
-            actions = org.organize_by_time(dry_run=True, use_symlinks=True)
+            logger.info("Calling organize_with_symlinks(dry_run=True)")
+            actions = org.organize_with_symlinks(dry_run=True)
         elif mode == "theme":
+            logger.info("Calling organize_by_theme(dry_run=True)")
             actions = org.organize_by_theme(dry_run=True)
         elif mode == "both":
-            actions.extend(org.organize_by_time(dry_run=True, use_symlinks=True))
+            logger.info("Calling both organize_with_symlinks and organize_by_theme")
+            actions.extend(org.organize_with_symlinks(dry_run=True))
             actions.extend(org.organize_by_theme(dry_run=True))
         
+        logger.info(f"Generated {len(actions)} actions")
         return JSONResponse({
             "success": True,
             "actions": actions,
@@ -141,6 +185,8 @@ async def organize_files(request: Request):
             "note": "Web UI is read-only - no files were moved or changed"
         })
     except Exception as e:
+        logger.error(f"Error in /api/organize endpoint: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/config")
@@ -444,6 +490,17 @@ header h1 {
     transform: translateY(-2px);
 }
 
+.file-card.clickable {
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.file-card.clickable:hover {
+    border-color: #3498db;
+    transform: translateY(-2px);
+}
+
 .file-header {
     display: flex;
     justify-content: space-between;
@@ -652,9 +709,9 @@ class PlaygroundUI {
         }
 
         grid.innerHTML = this.filteredFiles.map(file => `
-            <div class="file-card">
+            <div class="file-card clickable" onclick="window.openDirectory('${file.path}')">
                 <div class="file-header">
-                    <div class="file-name">${file.name}</div>
+                    <div class="file-name">${this.getFileIcon(file)} ${file.name}</div>
                     <div class="file-badges">
                         <span class="badge ${file.time_category}">${file.time_category}</span>
                         <span class="badge ${file.theme}">${file.theme}</span>
@@ -685,6 +742,40 @@ class PlaygroundUI {
     truncatePath(path) {
         if (path.length <= 40) return path;
         return '...' + path.slice(-37);
+    }
+
+    getFileIcon(file) {
+        if (file.is_directory) {
+            return '📁';
+        }
+        
+        // File icons based on extension
+        const ext = file.file_extension;
+        if (['.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.cpp', '.c', '.go', '.rs', '.rb', '.php'].includes(ext)) {
+            return '💻';
+        } else if (['.jpg', '.jpeg', '.png', '.gif', '.svg', '.ico'].includes(ext)) {
+            return '🖼️';
+        } else if (['.mp4', '.avi', '.mov', '.mkv', '.webm'].includes(ext)) {
+            return '🎬';
+        } else if (['.mp3', '.wav', '.flac', '.ogg'].includes(ext)) {
+            return '🎵';
+        } else if (['.pdf', '.doc', '.docx'].includes(ext)) {
+            return '📄';
+        } else if (['.txt', '.md', '.readme'].includes(ext)) {
+            return '📝';
+        } else if (['.json', '.yaml', '.yml', '.xml'].includes(ext) || 
+                   file.name.includes('config') || file.name.includes('.env') || 
+                   ['.gitignore', '.npmignore', '.dockerignore', '.prettierrc', '.eslintrc'].includes(file.name)) {
+            return '⚙️';
+        } else if (['.sql', '.db', '.sqlite'].includes(ext)) {
+            return '🗄️';
+        } else if (['.csv', '.xlsx', '.xls'].includes(ext)) {
+            return '📊';
+        } else if (['.zip', '.tar', '.gz', '.rar', '.7z'].includes(ext)) {
+            return '📦';
+        } else {
+            return '📄';
+        }
     }
 
     async organizeFiles(mode) {
@@ -722,6 +813,12 @@ class PlaygroundUI {
     }
 }
 
+// Global function to open directories in Finder/Explorer
+window.openDirectory = function(path) {
+    // Show an info dialog since we can't actually open directories from web
+    alert(`Directory: ${path}\\n\\nThis is a read-only web interface. To open this directory, use your file manager or terminal:\\n\\nTerminal: cd "${path}"\\nFinder: open "${path}"`);
+};
+
 // Initialize the UI when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     new PlaygroundUI();
@@ -737,17 +834,28 @@ def main():
     create_templates()
     create_static_files()
     
+    # Get configuration from environment variables
+    host = os.getenv("WEB_SERVER_HOST", "0.0.0.0")
+    port = int(os.getenv("WEB_SERVER_PORT", "8000"))
+    reload = os.getenv("WEB_SERVER_RELOAD", "true").lower() == "true"
+    log_level = os.getenv("WEB_SERVER_LOG_LEVEL", "info")
+    
+    # Configure logging level for playground organizer
+    organizer_log_level = os.getenv("ORGANIZER_LOG_LEVEL", "INFO")
+    logging.getLogger("backend.src.playground_organizer.playground_organizer").setLevel(organizer_log_level)
+    
     print("🚀 Starting Playground Organizer Web UI...")
-    print("📁 Web interface will be available at: http://localhost:8000")
+    print(f"📁 Web interface will be available at: http://localhost:{port}")
     print("🔄 Press Ctrl+C to stop the server")
+    print(f"🔧 Log level: {log_level}, Organizer log level: {organizer_log_level}")
     
     # Run the FastAPI server
     uvicorn.run(
-        "web_ui:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True,
-        log_level="info"
+        "backend.start_web_server:app",
+        host=host,
+        port=port,
+        reload=reload,
+        log_level=log_level
     )
 
 if __name__ == "__main__":

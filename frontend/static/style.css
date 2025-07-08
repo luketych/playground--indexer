@@ -133,6 +133,17 @@ header h1 {
     transform: translateY(-2px);
 }
 
+.file-card.clickable {
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.file-card.clickable:hover {
+    border-color: #3498db;
+    transform: translateY(-2px);
+}
+
 .file-header {
     display: flex;
     justify-content: space-between;
@@ -175,35 +186,6 @@ header h1 {
 .badge.tools { background: #95a5a6; }
 .badge.learning { background: #ff9800; }
 .badge.misc { background: #bdc3c7; }
-
-.nav-section {
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-.nav-links {
-    display: flex;
-    gap: 15px;
-    justify-content: center;
-}
-
-.nav-link {
-    color: #007bff;
-    text-decoration: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    transition: background-color 0.2s;
-    font-weight: 500;
-}
-
-.nav-link:hover {
-    background: #e9ecef;
-}
-
-.nav-link.active {
-    background: #007bff;
-    color: white;
-}
 
 .info-banner {
     background: #e8f4fd;

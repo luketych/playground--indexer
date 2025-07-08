@@ -10,7 +10,14 @@
       "Bash(mkdir:*)",
       "Bash(uv run:*)",
       "Bash(curl:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(find:*)",
+      "Bash(diff:*)",
+      "Bash(grep:*)",
+      "Bash(tree:*)",
+      "Bash(rg:*)",
+      "Bash(python:*)",
+      "Bash(ls:*)"
     ]
   },
   "enableAllProjectMcpServers": false

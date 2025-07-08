@@ -15,8 +15,8 @@ from unittest.mock import patch, MagicMock
 
 # Import the module from the package structure
 import sys
-sys.path.insert(0, 'src')
-from playground_organizer import PlaygroundOrganizer
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from backend.src.playground_organizer import PlaygroundOrganizer
 
 
 class TestPlaygroundOrganizer:

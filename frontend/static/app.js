@@ -110,9 +110,9 @@ class PlaygroundUI {
         }
 
         grid.innerHTML = this.filteredFiles.map(file => `
-            <div class="file-card">
+            <div class="file-card clickable" onclick="window.openDirectory('${file.path}')">
                 <div class="file-header">
-                    <div class="file-name">${file.name}</div>
+                    <div class="file-name">${this.getFileIcon(file)} ${file.name}</div>
                     <div class="file-badges">
                         <span class="badge ${file.time_category}">${file.time_category}</span>
                         <span class="badge ${file.theme}">${file.theme}</span>
@@ -143,6 +143,40 @@ class PlaygroundUI {
     truncatePath(path) {
         if (path.length <= 40) return path;
         return '...' + path.slice(-37);
+    }
+
+    getFileIcon(file) {
+        if (file.is_directory) {
+            return '📁';
+        }
+        
+        // File icons based on extension
+        const ext = file.file_extension;
+        if (['.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.cpp', '.c', '.go', '.rs', '.rb', '.php'].includes(ext)) {
+            return '💻';
+        } else if (['.jpg', '.jpeg', '.png', '.gif', '.svg', '.ico'].includes(ext)) {
+            return '🖼️';
+        } else if (['.mp4', '.avi', '.mov', '.mkv', '.webm'].includes(ext)) {
+            return '🎬';
+        } else if (['.mp3', '.wav', '.flac', '.ogg'].includes(ext)) {
+            return '🎵';
+        } else if (['.pdf', '.doc', '.docx'].includes(ext)) {
+            return '📄';
+        } else if (['.txt', '.md', '.readme'].includes(ext)) {
+            return '📝';
+        } else if (['.json', '.yaml', '.yml', '.xml'].includes(ext) || 
+                   file.name.includes('config') || file.name.includes('.env') || 
+                   ['.gitignore', '.npmignore', '.dockerignore', '.prettierrc', '.eslintrc'].includes(file.name)) {
+            return '⚙️';
+        } else if (['.sql', '.db', '.sqlite'].includes(ext)) {
+            return '🗄️';
+        } else if (['.csv', '.xlsx', '.xls'].includes(ext)) {
+            return '📊';
+        } else if (['.zip', '.tar', '.gz', '.rar', '.7z'].includes(ext)) {
+            return '📦';
+        } else {
+            return '📄';
+        }
     }
 
     async organizeFiles(mode) {
@@ -179,6 +213,12 @@ class PlaygroundUI {
         }
     }
 }
+
+// Global function to open directories in Finder/Explorer
+window.openDirectory = function(path) {
+    // Show an info dialog since we can't actually open directories from web
+    alert(`Directory: ${path}\n\nThis is a read-only web interface. To open this directory, use your file manager or terminal:\n\nTerminal: cd "${path}"\nFinder: open "${path}"`);
+};
 
 // Initialize the UI when the page loads
 document.addEventListener('DOMContentLoaded', () => {

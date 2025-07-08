@@ -2,124 +2,119 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Common Commands
+## Project Architecture
 
-### Web Interface (Read-Only)
-```bash
-# Launch web UI for safe file viewing and analysis
-uv run python web_ui.py
-# Opens at http://localhost:8000
-# Features: View files, filter by time/theme, search, preview organization
-# IMPORTANT: Web UI is READ-ONLY - no files are moved or changed
-```
-
-### Python Scripts
-```bash
-# Generate detailed access report
-python3 playground-organizer.py --report
-
-# Analyze access patterns 
-python3 playground-organizer.py --analyze
-
-# Organize files by time (dry run)
-python3 playground-organizer.py --organize
-
-# Actually execute time-based organization
-python3 playground-organizer.py --organize --execute
-
-# Organize by themes using symlinks (dry run)
-python3 playground-organizer.py --theme
-
-# Execute theme-based organization
-python3 playground-organizer.py --theme --execute
-
-# Organize by time using symlinks instead of moving
-python3 playground-organizer.py --organize --symlinks --execute
-
-# Create both time and theme organizations
-python3 playground-organizer.py --both --execute
-
-# Start real-time file monitoring
-python3 playground-organizer.py --watch
-```
-
-### Shell Scripts
-```bash
-# Make scripts executable if needed
-chmod +x *.sh
-
-# Quick analysis
-./quick-analyze.sh
-
-# Detailed access analysis  
-./analyze-access.sh
-
-# Organize files (dry run)
-./auto-organize.sh
-
-# Execute organization
-./auto-organize.sh /Users/luketych/Dev/_playground false
-
-# Start file access monitoring
-./file-watcher.sh
-```
-
-## Architecture
-
-This is a playground organization system that automatically categorizes directories in multiple ways:
-
-### Time-based Organization
-- **current/** - Files accessed within last 30 days
-- **recent/** - Files accessed within last 6 months  
-- **old/** - Files accessed within last year
-- **archive/** - Files older than 1 year
-
-### Theme-based Organization (via Symlinks)
-- **organized/by-theme/ai/** - AI/ML related projects
-- **organized/by-theme/productivity/** - Productivity tools and apps
-- **organized/by-theme/stocks/** - Finance and trading related
-- **organized/by-theme/development/** - Development tools and APIs
-- **organized/by-theme/data/** - Data analysis and databases
-- **organized/by-theme/media/** - Media files and projects
-- **organized/by-theme/tools/** - Utilities and automation
-- **organized/by-theme/learning/** - Educational content
-- **organized/by-theme/misc/** - Uncategorized projects
+This is a **Playground Organization System** that automatically organizes files by access frequency and themes. It consists of:
 
 ### Core Components
+- **Backend**: Main organizer logic in `backend/src/playground_organizer/playground_organizer.py`
+- **Web UI**: FastAPI-based read-only interface in `backend/start_web_server.py`
+- **Frontend**: HTML/CSS/JS static files in `frontend/`
+- **CLI Entry Point**: `playground-organizer.py` (wrapper script)
 
-1. **playground-organizer.py** - Main Python script with full functionality
-   - Uses file system timestamps (atime/mtime) to determine access patterns
-   - Calculates directory sizes using `du -sk`
-   - Supports dry-run and execution modes
-   - Can monitor real-time file access using fswatch
-   - Creates symbolic links for theme-based organization
-   - Detects themes based on directory names and keywords
-   - Supports dual organization (time + theme simultaneously)
+### Key Architecture Patterns
+- **Dual organization modes**: Time-based (current/recent/old/archive) and theme-based (AI, productivity, stocks, etc.)
+- **Symlink-based organization**: Preserves original structure while creating organized views
+- **Read-only web interface**: Web UI never modifies files, only analyzes and previews
+- **Environment-driven configuration**: Uses `.env` files and environment variables
 
-2. **Shell Scripts** - Simplified versions for specific tasks
-   - `auto-organize.sh` - Basic file organization
-   - `file-watcher.sh` - Real-time access monitoring
-   - `quick-analyze.sh` - Fast analysis without size calculation
-   - `analyze-access.sh` - Detailed access pattern analysis
+## Development Commands
 
-### Dependencies
+### Setup and Dependencies
+```bash
+# Install dependencies
+uv sync
 
-- Python 3.x (available: Python 3.13.3)
-- fswatch (available: /opt/homebrew/bin/fswatch) - for real-time monitoring
-- Standard Unix utilities: du, find, stat
+# Install development dependencies
+uv sync --dev
+```
 
-### Configuration
+### Running the Application
+```bash
+# CLI - Generate report
+uv run playground-organizer --report
 
-- `.playground-config.json` - Python script configuration
-- Thresholds: 30 days (current), 180 days (recent), 365 days (old)
-- Excluded directories: .git, node_modules, .DS_Store, __pycache__
-- Theme mappings: Configurable keywords for automatic theme detection
-- Symlink settings: Base directory and organization modes
+# CLI - Preview organization (dry run)
+uv run playground-organizer --organize
 
-### Safety Features
+# CLI - Execute organization
+uv run playground-organizer --organize --execute
 
-- Dry run by default - never moves files unless `--execute` flag is used
-- Duplicate detection prevents overwriting existing files
-- Symbolic links preserve original file locations
-- All operations can be reversed by removing symlinks or moving files back
-- Original files remain untouched when using symlink organization
+# CLI - Theme organization
+uv run playground-organizer --theme --execute
+
+# Web UI - Read-only interface
+uv run web-ui
+# or
+uv run python backend/start_web_server.py
+
+# Web UI - Debug mode
+uv run web-ui-debug
+# or
+uv run python backend/start_web_server_debug.py
+```
+
+### Testing
+```bash
+# Run all tests
+uv run python tests/run_tests.py
+
+# Run specific test suites
+uv run python tests/run_tests.py --unit
+uv run python tests/run_tests.py --integration
+uv run python tests/run_tests.py --e2e
+
+# Run tests with pytest directly
+uv run pytest
+```
+
+## Configuration
+
+### Environment Variables
+Copy `.env.example` to `.env` and customize:
+- `WEB_SERVER_HOST/PORT`: Web server configuration
+- `CURRENT_THRESHOLD/RECENT_THRESHOLD/OLD_THRESHOLD`: Time-based organization thresholds (days)
+- `EXCLUDE_DIRS`: Comma-separated list of directories to exclude
+- `PLAYGROUND_CONFIG_FILE`: JSON config file name (default: `.playground-config.json`)
+
+### Runtime Configuration
+The system creates a `.playground-config.json` file with:
+- Theme mappings (AI, productivity, stocks, etc.)
+- Organization modes and symlink settings
+- Excluded directories and tracking preferences
+
+## Key File Locations
+
+### Main Entry Points
+- `playground-organizer.py`: CLI wrapper script
+- `backend/start_web_server.py`: Web UI server
+- `backend/start_web_server_debug.py`: Debug web server
+
+### Core Logic
+- `backend/src/playground_organizer/playground_organizer.py`: Main organizer class (465 lines)
+- `frontend/templates/index.html`: Web UI template (embedded in Python)
+- `frontend/static/`: CSS and JavaScript files (embedded in Python)
+
+### Configuration & Scripts
+- `.env.example`: Environment variable template
+- `scripts/`: Shell scripts for automation (analyze-access.sh, auto-organize.sh, file-watcher.sh, quick-analyze.sh)
+- `tests/run_tests.py`: Test runner with multiple test suites
+
+## Development Notes
+
+### Web UI Architecture
+- **FastAPI backend** serves both API and static files
+- **Read-only by design**: All `/api/organize` endpoints run in dry-run mode
+- **Dynamic file creation**: Templates and static files are generated in Python code
+- **Theme detection**: Automatic categorization based on directory names
+
+### CLI Architecture
+- **Dual organization**: Time-based and theme-based modes can run together
+- **Symlink preservation**: Original files remain in place, organized views use symlinks
+- **Safe by default**: All operations run in dry-run mode unless `--execute` is specified
+
+### Testing Strategy
+- **Unit tests**: Core functionality testing
+- **Integration tests**: Component interaction testing
+- **End-to-end tests**: Full workflow testing
+- **Test playground**: `tests/test_playground/` with sample directory structure
